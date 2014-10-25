@@ -1,0 +1,26 @@
+<html>
+  <body>
+    <h3>CROSS VALIDATION RESULTS FOR 2nd STAGE CLASSIFIER</h3>
+    <center>
+     <img src="figs/dog_pyr2_basicPooling_allSamples.png" width="800px"><br>
+     <b>Figure 1.</b> Comparison of features for dog classification. <br>Experiment
+     with all training samples (with no preference, filtering or augmentation) using
+     the following SPM configuration: 2 levels, basic feature pooling (each 8 pixels).<br>
+     Notice that the performance of Color-SIFT is lower than regular SIFT.<hr>
+     <img src="figs/dog_pyr3_densePooling_allSamples.png" width="800px"><br>
+     <b>Figure 2.</b> Comparison of features for dog classification. <br>Experiment
+     with all training samples using
+     the following SPM configuration: 3 levels, dense feature pooling (each 2 pixels for SIFT
+     and each 4 pixels for Color-SIFT).<hr>
+     <img src="figs/dog_pyr3_densePooling_filteredSamples.png" width="800px"><br>
+     <b>Figure 3.</b> Comparison of features for dog classification. <br>Experiment
+     using 3-level SPM + dense feature pooling, using a clean training set, i.e. low-entropy
+     negative samples and augmented positives. It is important to note that the number of
+     negatives is less here than in the experiment in Figure 2. It may be an easier task as
+     well, given the number of positives samples and the easy negatives. However, in the
+     validation set, this configuration also performed significantly better.
+     <hr>
+     <a href="eval2.php?sub=clean_c1_pyr3/20">Validation Experiments</a>
+    </center>
+  </body>
+</html>

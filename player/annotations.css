@@ -1,0 +1,154 @@
+*, *:before, *:after 
+{
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+table.tp
+{
+    //border-collapse:collapse;
+}
+table.tp th
+{
+    border: 1px solid black;
+}
+table td
+{
+    font-size: 14pt;
+}
+table.tp tr
+{
+    text-align: center;
+}
+body,table
+{
+    font-family : Arial;
+    font-size : 14pt;
+    padding-left:8px;
+    padding-right:8px;
+}
+.hover { background-color: #FF3030; }
+.hover2 { background-color: #A9E2F3; }
+textarea {resize: none;}
+text {font-size: 12pt;}
+text.prompt {font-size: 14pt;}
+.ui-helper-center {
+    text-align: center;
+}
+
+.promptInput
+{
+    font-size:14pt;
+}
+text.lg {
+    font-weight:bold;
+    font-size: 12pt;
+    display:block;
+}
+text.explainLabel
+{
+    font-weight:bold;
+    font-size: 15pt;
+    display:block;
+    margin-top:5px;
+}
+text.query {
+    font-size:18pt;
+}
+
+text.cap {
+    font-weight:bold;
+    font-size: 15pt;
+    display:block;
+    margin-top:10px;
+}
+
+text.title {
+    font-weight:bold;
+    font-size: 18pt;
+    }
+
+text.sm {
+    font-size: 16pt;
+    display:block;
+}
+
+p.falseGuide {
+    background: #EEE;
+    color: red;
+}
+p.trueGuide {
+    background: #EEE;
+    color: #0C0;
+}
+
+p.false {
+    font-size: 14pt;
+    border:3px solid red;
+    padding-top:5px;
+    padding-bottom:5px;
+    padding-right:5px;
+    padding-left:5px;
+}
+p.true {
+    font-size: 14pt;
+    border:3px solid green;
+    padding-top:5px;
+    padding-bottom:5px;
+    padding-right:5px;
+    padding-left:5px;
+}
+p.queryTag {
+    font-size: 18pt;
+    border:2px solid black;
+    padding-top:5px;
+    padding-bottom:5px;
+    padding-right:5px;
+    padding-left:5px;
+}
+.border-bottom {
+    border-bottom: solid 5px black;
+} 
+
+.main {
+    //clear: both;
+    //position: relative;
+}
+
+
+.right {
+
+}
+
+.left {
+
+}
+
+img {
+    position:absolute;
+    z-index:1;
+}
+
+canvas {
+    position:relative;
+    z-index:20;
+}
+
+input.tool {
+    width: 8em;  height: 3em;
+    font-size: 12pt;
+}
+
+#instructionsDiv a:link,
+#instructionsDiv a:visited {
+  color: #000000;
+  text-decoration: none;
+}
+#instructionsDiv a:hover,
+#instructionsDiv a:active {
+  color: #0000FF;
+  text-decoration: underline;
+}
+
+.vertical-text {
+	transform: rotate(90deg);
+	transform-origin: left top 0;
+}

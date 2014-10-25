@@ -1,0 +1,122 @@
+<html>
+  <head>
+  <style>
+.shadow {
+  -moz-box-shadow:    3px 3px 5px 6px #ccc;
+  -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+  box-shadow:         3px 3px 5px 6px #ccc;
+}
+body
+{
+    font-family : Arial;
+}
+td{ 
+text-align: center; 
+}
+  </style>
+  </head>
+  <body>
+    <center>
+    <h2>EVALUATION OF FEATURES FOR 2nd STAGE CLASSIFIER</h2>
+     <div style="border:2px solid; border-radius:10px; box-shadow: 10px 10px 5px #888888; width:600px;" align="left">
+       <center><b>PART 1.</b><br>
+       <i>Conclusions of evaluating different feature configurations</i>.</center>
+       <ul>
+         <li>Dense sampling and more pyramid levels are complementary</li>
+         <li>Dense sampling is particularly costly for ColorSIFT</li>
+         <li>ColorSIFT always performed worse than regular SIFT</li>
+         <li><a href="ranking.php?exp=2px3py" target="_blank">See images ranked by classifier scores</a></li>
+       </ul>
+     </div>
+     <br>
+     <b>Table 1.</b> Average Precision on Cross Validation Experiments<br>
+     <table border="1">
+       <tr>
+         <th>Configuration</th><th width="100px">RGBHist</th><th width="100px">Color-SIFT</th>
+         <th width="100px">HOG</th><th width="100px">SIFT</th><th width="100px">ALL</th>
+         <th>Validation Performance (All)</th>
+       </tr>
+       <tr>
+         <td>8-pixel Sampling + 2 Level Pyramids</td>
+         <td>55.43</td><td>77.11</td><td>81.89</td><td>86.37</td><td>95.10</td>
+         <td> 47% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=8px2py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+       <tr>
+         <td>8-pixel Sampling + 3 Level Pyramids</td>
+         <td>55.43</td><td>83.78</td><td>87.58</td><td>91.63</td><td>96.95</td>
+         <td> 50% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=8px3py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+       <tr>
+         <td>4-pixel Sampling + 2 Level Pyramids</td>
+         <td>55.43</td><td>85.24</td><td>81.89</td><td>91.58</td><td>96.96</td>
+         <td> 49% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=4px2py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+       <tr>
+         <td>4-pixel Sampling + 3 Level Pyramids</td>
+         <td>55.43</td><td>90.63</td><td>87.58</td><td>94.94</td><td>98.07</td>
+         <td> 52% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=4px3py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+       <tr>
+         <td>2-pixel Sampling + 2 Level Pyramids</td>
+         <td>55.43</td><td>87.31</td><td>81.89</td><td>93.65</td><td>97.25</td>
+         <td> 50% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=2px2py/0.2" target="_blank">See Details</a></td>
+       </tr>
+       <tr bgcolor="#CCCCCC">
+         <td>2-pixel Sampling + 3 Level Pyramids</td>
+         <td>55.43</td><td>90.63</td><td>87.58</td><td>95.82</td><td>98.28</td>
+         <td> 52% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=2px3py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+     </table>
+     <hr>
+     <div style="border:2px solid; border-radius:10px; box-shadow: 10px 10px 5px #888888; width:600px;" align="left">
+       <center><b>PART 2.</b><br>
+       <i>Replacing ColorSIFT by Spatial Pyramids of Color Histograms.</i></center>
+       <ul>
+         <li>ColorSIFT is too expensive to compute and performs worse than regular SIFT</li>
+         <li>We can replace local color information of ColorSIFT with SP of RGB histograms</li>
+         <li>It results in the same performance under much cheaper computation</li>
+         <li><a href="ranking.php?exp=2px3py_PRGB" target="_blank">See images ranked by classifier scores</a></li>
+       </ul>
+     </div>
+     <br>
+     <b>Table 1.</b> Average Precision on Cross Validation Experiments<br>
+     <table border="1">
+       <tr>
+         <th width="200px">Configuration</th><th width="100px">RGBHist</th><th width="100px">Color-SIFT</th>
+         <th width="100px">HOG</th><th width="100px">SIFT</th><th width="100px">ALL</th>
+         <th>Validation Performance (All)</th>
+       </tr>
+       <tr>
+         <td><b>Best Performance with ColorSIFT.</b><br>2-pixel Sampling + 3 Level Pyramids</td>
+         <td>55.43</td><td>90.63</td><td>87.58</td><td>95.82</td><td>98.28</td>
+         <td> 52% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=2px3py/0.2" target="_blank">See Details</a> </td>
+       </tr>
+       <tr>
+         <td>2-pixel Sampling + 2 Level Pyramids. <br><b>No ColorSIFT.</b> Regular RGBHist</td>
+         <td>55.43</td><td>N.A.</td><td>87.58</td><td>95.63</td><td>97.88</td>
+         <td> 51% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=2px3py_NCS/0.2" target="_blank">See Details</a></td>
+       </tr>
+       <tr bgcolor="#CCCCCC">
+         <td>2-pixel Sampling + 3 Level Pyramids. <br>No ColorSIFT. <b>RGBHist Pyramid</b></td>
+         <td>76.94</td><td>N.A.</td><td>87.58</td><td>95.82</td><td>98.18</td>
+         <td> 52% @ 0.2 overlap <a href="eval2.php?cat=dog&sub=2px3py_PRGB/0.2" target="_blank">See Details</a> </td>
+       </tr>
+     </table><br>
+     The classifier based on RGBHist-Pyramids actually performs better than ColorSIFT when evaluated at 50% overlap, 
+     which is the official criteria for object detection evaluation.
+     <hr>
+     <table width="100%">
+       <tr><td>
+         <img src="figs/2px3py.png" width="100%"><br>
+         <b>Figure 1.</b> Configurations with Best Performance. All features included RGBHist, HOG, ColorSIFT and SIFT.
+         (2px sampling and 3-level pyramids).
+       </td><td>
+         <img src="figs/2px3py_PRGB.png" width="100%"><br>
+         <b>Figure 2.</b> Replacement of ColorSIFT by a 3-Level Pyramid of RGB-Histograms. 
+         Notice the large improvement of RGBHist. No performance loss by leaving out ColorSIFT.
+       </td></tr>
+     </table>
+     <hr>
+    </center>
+  </body>
+</html>

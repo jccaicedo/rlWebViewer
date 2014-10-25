@@ -1,0 +1,102 @@
+<html>
+<style>
+body
+{
+    font-family : Arial;
+}
+</style>
+  <body>
+    <center><h3>COMBINATION OF SCORES</h3></center>
+    <p>
+    Both, the DPM and the 2nd Stage Classifier produce scores that can
+    be combined to rerank detections. Several strategies to combine scores
+    might be used, such as boosting or an additional classifier. However, there 
+    are some challenges to achieve this in a clean way.<br><br>
+    <center><b>PROBLEMS</b></center><br>
+    First, the training data does not have scores since the positive examples
+    come from ground truth bounding boxes. Generating scores on the training 
+    data requires a careful methodology to avoid overfitting. Some previous 
+    works have suggested leave-one-out [1,2], but it can be very expensive for 
+    our purposes.
+    Using a separated validation set for learning a combination function also
+    comes with several problems. Ground truth annotations come in the form of 
+    bounding boxes, so only by defining an adecuate overlaping criteria we can
+    get binary labels for boosting and/or classification. Besides, fitting
+    the function on a small validation set might create problems for large
+    scale learning as well.<br><br>
+    <center><b>A SIMPLE APPROACH</b></center><br>
+    Here, I evaluate a simple re-scoring approach by adjusting the parameter
+    of a convex combination of scores. This is basically a voting strategy,
+    which is well documented in machine learning [3] and does not require
+    expensive optimizations and produce good enough results. Figure 1 shows
+    how by controlling the weights of the combination, the preformance
+    improves significantly.
+    </p>
+   <center><img src="figs/combination.png"><br> 
+   <b> Figure 1. </b> Average precision of the combination of scores. X-axis is
+   the weight given to the second stage classifier. When the weight is 0, the 
+   performance is of the DPM alone. When the weight is 1, the performance 
+   corresponds to the 2nd stage classifier alone. Evaluation done on the 
+   same data using different overlaps with the ground truth.</center>
+   <hr>
+    <p>Notice a peak on performance around 0.2 for most of the overlaps. This
+    may be interpreted as giving more weight to the DPM score than to the 
+    2nd stage classifier score. However, this actually indicates the opposite.
+    When looking to a scatter plot of the scores produced by the DPM against 
+    the scores of the 2nd stage classifier, one can notice that the scores 
+    produced by the 2nd stage classifier are more correlated with the 
+    true labels.
+    </p>
+    <center>
+    <table width="100%"><tr>
+      <td><img src="figs/dog_e_dog_combined_scores.png" width="100%"></td>
+      <td><img src="figs/dog_e_dog_combined_scores_threshold.png" width="100%"></td>
+    </tr></table><br>
+    
+    <b>Figure 2. </b>  LEFT: Scatter plot of scores on a validation set. 
+    RIGHT: Distribution of scores after combining them. Alpha is the combination
+    parameters, and Tau is the best threshold between positive and negatives.
+    </center><br><hr>
+    <center><b>DISCUSSIONS</b></center>
+    <p>A convex combination of scores is the dot product between the weights 
+    and the scores. From a classification perspective, it means that
+    a perpendicular plane to the weights separates positive from negative 
+    examples. So, a small weight to the 2nd stage classifier generates a
+    classification plane more perpendicular to the x-axis and more parallel 
+    to the y-axis. And it turns out to be good enough to improve performance.
+    The following table shows the absolute performance gains on average 
+    precision with respect to the DPM and the 2nd stage classifier alone.
+    </p>
+    <center>
+    <table border="1">
+      <tr>
+       <th>Evaluation Overlap</th><th width="100px">DPM AP</th>
+       <th width="100px">2ndSC AP</th><th width="100px">Best Combination</th>
+      </tr>
+      <tr>
+        <td>20%</td><td align="center">0.45</td>
+        <td align="center">0.52</td><td align="center"><b>0.57</b></td>
+      </tr>
+      <tr>
+        <td>30%</td><td align="center">0.36</td>
+        <td align="center">0.39</td><td align="center"><b>0.44</b></td>
+      </tr>
+      <tr>
+        <td>40%</td><td align="center">0.28</td>
+        <td align="center">0.28</td><td align="center"><b>0.33</b></td>
+      </tr>
+      <tr>
+        <td>50%</td><td align="center">0.20</td>
+        <td align="center">0.18</td><td align="center"><b>0.23</b></td>
+      </tr>
+
+    </table>
+    </center>
+    <p>
+    <center><b>REFERENCES</b></center><br>
+    [1] Finding Things: Image Parsing with Regions and Per-Exemplar Detectors. Tighe and Lazebnik. CVPR 2013 <br>
+    [2] Learning Collections of Part Models for Object Recognition. Endres, Shih, Jiaa, and Hoiem. CVPR 2013 <br>
+    [3] Introduction to Machine Learning. Alpaydin. The MIT Press. 2010
+   </p>
+  </body>
+</html>
