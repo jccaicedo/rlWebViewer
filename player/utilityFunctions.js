@@ -1,9 +1,33 @@
-function changeImage(im,dims) 
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+  return;
+}
+
+function findHHandWW() {
+    var _imgHeight;
+    var _imgWidth;
+    _imgHeight = this.height; _imgWidth = this.width; 
+    document.getElementById("canvas").width = _imgWidth;
+    document.getElementById("canvas").height = _imgHeight;
+    if(document.getElementById("graphView") != undefined) {
+      document.getElementById("graphView").width = _imgWidth;
+      document.getElementById("graphView").height = _imgHeight;
+    }
+    this.customAction();
+    return true;
+}
+
+function changeImage(im, customAction)
 {
     document.getElementById("displayImage").src = "";
     document.getElementById("displayImage").src = "showImg.php?name=" + im + ".jpg";
-    document.getElementById("canvas").width = dims[0];
-    document.getElementById("canvas").height = dims[1];
+    document.getElementById("displayImage").customAction = customAction;
+    document.getElementById("displayImage").onload = findHHandWW;
 }
 
 function displayErrorMsg(msg)

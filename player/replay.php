@@ -9,8 +9,16 @@ echo '<link rel="stylesheet" type="text/css" href="annotations.css">';
 if(isset($_GET["img"])) {
   $img = $_GET["img"];
 } else {
-  $img = "000900";//"004500";
+  $img = "000001";
 }
+//$MEM_DIR = "/home/caicedo/data/rl/S_lr0.0001_upe1_disc0.7/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/random/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/greedy/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/V3LayerModel/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/V3LayerModel_long/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/fullExp01/testMem/";
+$MEM_DIR = "/home/caicedo/data/rl/categories01/bicycle/testMem/";
+//$MEM_DIR = "/home/caicedo/data/rl/fullGreedy/testMem/";
 
 class Box {
   var $a;
@@ -42,8 +50,8 @@ function compareY($u, $v){
   return $u->y() == $v->y() ? 0 : ($u->y() > $v->y()) ? 1 : -1;
 }
 
-function loadEnvironment($img, $S, $H, $V) {  
-  $BOXES_DIR = "/home/caicedo/data/rcnnPascal/FineTunedFeatures07/";
+function loadEnvironment($img, $S, $H, $V) {
+  $BOXES_DIR = "/home/caicedo/data/rcnnPascal/proposals/rcnnProposalsPerImage/";
   $contents = file_get_contents($BOXES_DIR.$img.".idx");
   $contents = explode("\n",$contents);
   $boxes = array(); 
@@ -91,7 +99,7 @@ function loadEnvironment($img, $S, $H, $V) {
 }
 
 function loadGroundTruths($img) {
-  $contents = file_get_contents("/home/caicedo/data/cnnPatches/lists/2007/difficult/all_objects.txt");
+  $contents = file_get_contents("/home/caicedo/data/cnnPatches/lists/2007/all_objects_test.txt");
   $contents = explode("\n",$contents);
   $boxes = array();
   foreach($contents as $r){
@@ -105,6 +113,22 @@ function loadGroundTruths($img) {
   return $boxes;
 }
 
+function loadReplayData($img, $memDir) {
+  $contents = file_get_contents($memDir.$img.".txt");
+  return $contents;
+}
+
+function listMemoryEpisodes($memDir) {
+  $episodes = scandir($memDir);
+  foreach($episodes as $k=>$v) {
+    $episodes[$k] = str_replace('.txt','',$v);
+    if($v == '.' || $v == '..') {
+      $episodes[$k] = '';
+    }
+  }
+  return($episodes);
+}
+
 // MAIN PHP PROCEDURE
 $S = 10;
 $H = 3;
@@ -116,6 +140,8 @@ $numBoxes = $data['boxes'];
 $gtb = loadGroundTruths($img);
 $numObjects = count($gtb);
 $gtb = json_encode($gtb);
+$replayData = loadReplayData($img, $MEM_DIR);
+$episodes = listMemoryEpisodes($MEM_DIR);
 ?>
 
 <table id="mainTable" border="1" width="100%"><tr><td align="center" width="50%">
@@ -123,21 +149,23 @@ $gtb = json_encode($gtb);
 </td>
 <td align="center">
 Environment Viewer<br>
-Scale (rows) vs Location (columns)
 <table width="100%" border="1">
-<tr>
-  <td></td><td>A</td><td>B</td><td>C</td><td>D</td>
-  <td>E</td><td>F</td><td>G</td><td>H</td><td>I</td>
-</tr>
 <?php
+# Column-major indexing of positions
+$posIds = array(0,3,6,1,4,7,2,5,8);
 for($s = 0; $s < $S; $s++){
-  echo "<tr id='row_".$s."'><td>".(9-$s)."</td>";
-  for($v = 0; $v < $V; $v++) {
-    for($h = 0; $h < $H; $h++){
-      echo '<td id="cell_'.$s.'_'.$h.'_'.$v.'"></td>'; //'<a href="showBoxes.php?s='.$s.'&h='.$h.'&v='.$v.'&a=a">'.count($environment[$s][$h][$v]).'</a></td>';
+  if($s % 4 == 0 && $s < 9) { echo "</td></tr><tr>"; }
+  echo "<td align='center' style='font-size:12px'>Scale ".(9-$s)."<br>";
+  echo "<table border='1'>";
+  for($h = 0; $h < $H; $h++){
+    echo "<tr>";
+    for($v = 0; $v < $V; $v++) {
+      $pid = $posIds[$h + 3*$v];
+      echo '<td id="cell_'.$s.'_'.$pid.'" width="30px" style="font-size:14px">'.$pid.'</td>'; 
     }
+    echo "</tr>";
   }
-  echo "</tr>";
+  echo "</table></td>";
 }
 ?>
 </table>
@@ -147,7 +175,7 @@ for($s = 0; $s < $S; $s++){
   <tr>
     <td width="33%">
       <b>Environment Info</b>
-      <a href="showBoxes.php">Initialize</a> <hr>
+      <!-- <a href="showBoxes.php">Initialize</a> !--> <hr>
       Total Number of boxes: <span id="nBoxes"><?php echo $numBoxes?></span><br>
       Visited boxes: <span id="visited">0</span><br>
       Ground truth objects: <span id="objects"><?php echo$numObjects?></span><br>
@@ -158,28 +186,27 @@ for($s = 0; $s < $S; $s++){
         <tr><th colspan="3">ACTION CONTROLS</th></tr>
         <tr>
         <td align="center">
-          <input type="button" value="Explore 2 Scales Up" onclick="action('2UP')"/> <br>
-          <input type="button" value="Explore 1 Scales Up" onclick="action('1UP')"/> <hr>
-          <input type="button" value="Explore 1 Scales Down" onclick="action('1DOWN')"/> <br>
-          <input type="button" value="Explore 2 Scales Down" onclick="action('2DOWN')"/>
+          <input type="button" value="UP" onclick="action('1UP')"/> 
+          <input type="button" value="DOWN" onclick="action('1DOWN')"/> <hr>
+          <input type="button" value="STAY" onclick="action('STAY')"/>
         </td>
         <td align="center">Go To<br>
             <table>
-              <tr><td><input type="button" value="A" onclick="action('A')"/></td>
-                  <td><input type="button" value="B" onclick="action('B')"/></td>
-                  <td><input type="button" value="C" onclick="action('C')"/></td>
+              <tr>
+                  <td align="center"><input type="button" value="FRONT" onclick="action('FRONT')"/></td>
               </tr>
-              <tr><td><input type="button" value="D" onclick="action('D')"/></td>
-                  <td><input type="button" value="E" onclick="action('E')"/></td>
-                  <td><input type="button" value="F" onclick="action('F')"/></td>
+              <tr><td align="center"><input type="button" value="LEFT" onclick="action('LEFT')"/>
+                  <input type="button" value="RIGHT" onclick="action('RIGHT')"/></td>
               </tr>
-              <tr><td><input type="button" value="G" onclick="action('G')"/></td>
-                  <td><input type="button" value="H" onclick="action('H')"/></td>
-                  <td><input type="button" value="I" onclick="action('I')"/></td>
+              <tr>
+                  <td align="center"><input type="button" value="BACK" onclick="action('BACK')"/></td>
               </tr>
             </table>
         </td>
-        <td align="center">
+        </tr>
+        <tr>
+          <td align="center">Action Value: <br><span id="actionValue"></span></td>
+          <td align="center">Reward: <br><span id="reward"></span></td>
         </tr>
       </table>
     </td>
@@ -192,39 +219,65 @@ for($s = 0; $s < $S; $s++){
       <font color="white">.</font>
     </td>
 </table>
+<?php
+  for($i = 0; $i < count($episodes); $i++) {
+    echo '<a href="replay.php?img='.$episodes[$i].'">'.$episodes[$i].'</a> ';
+    if($i%12==0) echo "<br>";
+  }
+?>
 <script>
-var totalBoxes = <?php echo$numBoxes?>;
+var replay = <?php echo $replayData?>;
+var totalBoxes = <?php echo $numBoxes?>;
 var visitedBoxes = 0;
 var S = <?php echo$S?>, H = <?php echo$H?>, V = <?php echo$V?>;
 var batch = 3;
-var size = S/2;
+var size = 0; //S/2; // Set to zero to visualize greedy
 var horizontal = 0;
 var vertical = 0;
 var actionChosen = 0;
-var env = <?php echo$env?>;
-var vis = <?php echo$vis?>;
-var gtb = <?php echo$gtb?>;
+var env = <?php echo $env?>;
+var vis = <?php echo $vis?>;
+var gtb = <?php echo $gtb?>;
 var hits = 0;
 var actionCounter = 0;
 var locations = ['A','B','C','D','E','F','G','H','I'];
+var actionList = ['1UP','1DOWN','FRONT','BACK','LEFT','RIGHT','STAY'];
+var replayInstant = 0;
+var replayJSInterval = -1;
+
+function startReplay() {
+  replayJSInterval = setInterval( function() { replayAction() }, 100 );
+}
+
+function stopReplay() {
+  if(replayJSInterval != -1) {
+    clearInterval(replayJSInterval);
+    replayJSInterval = -1;
+  }
+}
+
+function replayAction() {
+  if(replayInstant < replay.actions.length){
+    action( actionList[ replay.actions[replayInstant] ] );
+    document.getElementById('actionValue').innerHTML = ' ' + replay.values[replayInstant].toFixed(2);
+    document.getElementById('reward').innerHTML = ' ' + replay.rewards[replayInstant].toFixed(2);
+    replayInstant += 1;
+  } else {
+    stopReplay();
+  }
+}
 
 function action(a) {
   var s = size;
   var h = horizontal;
   var v = vertical;
-  if(a == '2UP') { s = Math.max(s-2,0); }
-  else if(a == '1UP') { s = Math.max(s-1,0); }
-  else if(a == 'A') { h = 0; v = 0; }
-  else if(a == 'B') { h = 1; v = 0; }
-  else if(a == 'C') { h = 2; v = 0; }
-  else if(a == 'D') { h = 0; v = 1; }
-  else if(a == 'E') { h = 1; v = 1; }
-  else if(a == 'F') { h = 2; v = 1; }
-  else if(a == 'G') { h = 0; v = 2; }
-  else if(a == 'H') { h = 1; v = 2; }
-  else if(a == 'I') { h = 2; v = 2; }
+  if(a == '1UP') { s = Math.max(s-1,0); }
   else if(a == '1DOWN') { s = Math.min(s+1,9); }
-  else if(a == '2DOWN') { s = Math.min(s+2,9); }
+  else if(a == 'FRONT') { v = Math.max(v-1,0); }
+  else if(a == 'BACK') { v = Math.min(v+1,2); }
+  else if(a == 'LEFT') { h = Math.max(h-1,0); }
+  else if(a == 'RIGHT') { h = Math.min(h+1,2); }
+  else if(a == 'STAY') { }
   selectBoxes(s,h,v,a);
 }
 
@@ -236,26 +289,14 @@ function drawGroundTruths(){
 
 function selectBoxes(s,h,v,a) {
   var draw = Array();
-  //if(a[0] != "1" && a[0] != "2") {
-    var ini = vis[s][h][v];
-    var end = Math.min(ini+batch, env[s][h][v].length);
-    for(i = ini; i < end; i++) {
-      draw.push(env[s][h][v][i].b);
-    }
-    vis[s][h][v] = end;
-    document.getElementById('cell_'+s+'_'+h+'_'+v).style.backgroundColor = 'green';
-  /*} else {
-    for(i = 0; i < V; i++) {
-      for(j = 0; j < H; j++){
-        next = Math.min(vis[s][j][i], env[s][j][i].length);
-        if (next < env[s][j][i].length) {
-          draw.push(env[s][j][i][next].b);
-          vis[s][j][i] = next+1;
-        }
-      }
-    }
-    document.getElementById('row_'+s).style.backgroundColor = 'yellow';
-  }*/
+  var ini = vis[s][h][v];
+  var end = Math.min(ini+batch, env[s][h][v].length);
+  for(i = ini; i < end; i++) {
+    draw.push(env[s][h][v][i].b);
+  }
+  vis[s][h][v] = end;
+  document.getElementById('cell_'+s+'_'+(h+3*v)).style.backgroundColor = 'green';
+
   var c = document.getElementById("canvas");
   var ctx = c.getContext("2d");
   ctx.clearRect(0, 0, c.width, c.height);  
@@ -279,26 +320,21 @@ function selectBoxes(s,h,v,a) {
   visitedBoxes = 0;
   actionCounter += 1;
   for(s = 0; s < S; s++) {
-    document.getElementById('row_'+s).style.backgroundColor = '';
+    //document.getElementById('row_'+s).style.backgroundColor = '';
     for(h = 0; h < H; h++) {
       for(v = 0; v < V; v++) {
-        document.getElementById('cell_'+s+'_'+h+'_'+v).innerHTML = vis[s][h][v];
+        document.getElementById('cell_'+s+'_'+(h+3*v)).innerHTML = vis[s][h][v];
         if(vis[s][h][v] >= env[s][h][v].length) {
-          document.getElementById('cell_'+s+'_'+h+'_'+v).style.backgroundColor = '#CCCCCC';
+          document.getElementById('cell_'+s+'_'+(h+3*v)).style.backgroundColor = '#CCCCCC';
         } else {
-          document.getElementById('cell_'+s+'_'+h+'_'+v).style.backgroundColor = '';
+          document.getElementById('cell_'+s+'_'+(h+3*v)).style.backgroundColor = '';
         }
         visitedBoxes += vis[s][h][v];
       }
     }
   }
-  if(actionChosen[0] != "1" && actionChosen[0] != "2") {
-    document.getElementById('cell_'+size+'_'+horizontal+'_'+vertical).style.backgroundColor = 'green';
-    document.getElementById('location').innerHTML = locations[horizontal + 3*vertical];
-  } else {
-    document.getElementById('row_'+size).style.backgroundColor = 'yellow';
-    document.getElementById('location').innerHTML = 'Exploring all';
-  }
+  document.getElementById('cell_'+size+'_'+(horizontal+3*vertical)).style.backgroundColor = 'green';
+  document.getElementById('location').innerHTML = locations[horizontal + 3*vertical] + ' ('+horizontal+','+vertical+')';
   percent = 100*(visitedBoxes/totalBoxes);
   document.getElementById('visited').innerHTML = visitedBoxes + ' ('+percent.toFixed(2)+'%)';
   document.getElementById('scale').innerHTML = 9 - size;
@@ -314,6 +350,6 @@ function selectBoxes(s,h,v,a) {
   }
 }
 
-changeImage('<?php echo$img?>',Array(500,375));
-drawGroundTruths();
+changeImage('<?php echo$img?>', drawGroundTruths);
+startReplay();
 </script>

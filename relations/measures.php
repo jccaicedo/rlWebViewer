@@ -1,9 +1,11 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 'On');
 ini_set('memory_limit', '-1');
-$sourceDirs = array('/home/caicedo/data/cnnPatches/results/','/home/caicedo/data/rcnn/regionSearchResults/fifth/',
-                    '/home/caicedo/data/rcnn/regionSearchResults/sixth/','/home/caicedo/data/rcnn/regionSearchResults/fifth/additionalEval/');
+include_once("config.php");
+$sourceDirs = array('data/rcnnResult/');
 if(!isset($_GET["source"])) {
-  $dbdir="/home/caicedo/data/cnnPatches/results/";
+  $dbdir = $sourceDirs[0];
 } else {
   $dbdir = $sourceDirs[$_GET["source"]];
 }
@@ -27,9 +29,9 @@ function getStyle($det){
 }
 
 $maxThumbs = 100;
-$recall = $_GET["recall"];
-$row = $_GET["row"];
-$col = $_GET["col"];
+$recall = safeValue($_GET["recall"],0);
+$row = safeValue($_GET["row"],0);
+$col = safeValue($_GET["col"],0);
 $results = array();
 foreach($curve as $model=>$values){
   $results[$model] = array("tp"=>0,"fp"=>0,"pr"=>0);
@@ -65,7 +67,7 @@ $prev = number_format($prev[0],4);
 
 ?>
 <table border="1" width="100%">
-<? if(!isset($_GET["hidet"])){ ?>
+<?php if(!isset($_GET["hidet"])){ ?>
   <tr>
     <th>Model</th>
     <th>Prec</th>
@@ -73,27 +75,27 @@ $prev = number_format($prev[0],4);
     <th>True Pos.</th>
     <th>False Pos.</th>
     <th>
-      <a href="measures.php?cat=<?=$category?>&fparams=<?=$fparams?>&recall=<?=$prev?>">&#60;&#60; Prev</a> 
+      <a href="measures.php?cat=<?php echo $category?>&fparams=<?php echo $fparams?>&recall=<?php echo $prev?>">&#60;&#60; Prev</a> 
       <font color="white"> ------------------ </font>
       Detections Around this Point
       <font color="white"> ------------------ </font>
-      <a href="measures.php?cat=<?=$category?>&fparams=<?=$fparams?>&recall=<?=$next?>">Next &#62;&#62;</a>
+      <a href="measures.php?cat=<?php echo $category?>&fparams=<?php echo $fparams?>&recall=<?php echo $next?>">Next &#62;&#62;</a>
     </th>
   </tr>
 <?php
 }
 foreach($results as $model=>$values){
 ?>
-  <tr bgcolor="<?=$colors[$model]?>">
-<? if(!isset($_GET["hidet"])){ ?>
-    <td align="center"><?=$titles[$model]?></td>
-    <td align="center"><?=number_format($results[$model]["pr"][1],4)?></td>
-    <td align="center"><?=number_format($results[$model]["pr"][0],4)?></td>
-    <td align="center"><?=number_format($results[$model]["tp"])?></td>
-    <td align="center"><?=number_format($results[$model]["fp"])?></td>
-<?}?>
+  <tr bgcolor="<?php echo $colors[$model]?>">
+<?php if(!isset($_GET["hidet"])){ ?>
+    <td align="center"><?php echo $titles[$model]?></td>
+    <td align="center"><?php echo number_format($results[$model]["pr"][1],4)?></td>
+    <td align="center"><?php echo number_format($results[$model]["pr"][0],4)?></td>
+    <td align="center"><?php echo number_format($results[$model]["tp"])?></td>
+    <td align="center"><?php echo number_format($results[$model]["fp"])?></td>
+<?php }?>
     <td align="center">
-<?
+<?php
   $i = $results[$model]["stop"];
   if($i < $maxThumbs) $i = $maxThumbs;
   for($k=$maxThumbs;$k>0 ;$k--){ 
@@ -101,12 +103,12 @@ foreach($results as $model=>$values){
    $imgName = $det[0];
    $box = $det[1].":".$det[2].":".$det[3].":".$det[4];
 ?>
-      <a href="../lsodv2/edit/gtviewer.php?c=<?=$category?>&n=<?=$det[0]?>.jpg&d=3&x1=<?=$det[1]?>&y1=<?=$det[2]?>&x2=<?=$det[3]?>&y2=<?=$det[4]?>&overlap=<?=number_format($det[5],3)?>" target="_blank">
-      <img src="showDetection.php?n=<?=$imgName?>.jpg&b=<?=$box?>&d=1&c=<?=$category?>" style="<?=getStyle($det)?>" title="overlap:<?=number_format($det[6],3)?>">
+      <a href="../lsodv2/edit/gtviewer.php?c=<?php echo $category?>&n=<?php echo $det[0]?>.jpg&d=3&x1=<?php echo $det[1]?>&y1=<?php echo $det[2]?>&x2=<?php echo $det[3]?>&y2=<?php echo $det[4]?>&overlap=<?php echo number_format($det[5],3)?>" target="_blank">
+      <img src="showDetection.php?n=<?php echo $imgName?>.jpg&b=<?php echo $box?>&d=1&c=<?php echo $category?>" style="<?php echo getStyle($det)?>" title="overlap:<?php echo number_format($det[6],3)?>">
       </a>
-<? } ?>
+<?php } ?>
     </td>
   </tr>
-<? } ?>
+<?php } ?>
 </table>
 

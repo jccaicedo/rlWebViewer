@@ -109,8 +109,8 @@ p.queryTag {
 } 
 
 .main {
-    //clear: both;
-    //position: relative;
+    clear: both;
+    position: relative;
 }
 
 
@@ -151,4 +151,8 @@ input.tool {
 .vertical-text {
 	transform: rotate(90deg);
 	transform-origin: left top 0;
+}
+.bcell {
+  font-size: 10;
+  text-align: center;  
 }

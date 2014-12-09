@@ -1,5 +1,5 @@
 <?php
-include_once("../lsodv2/model/config.php");
+include_once("config.php");
 header("Content-type: image/jpg");
 $name = safeValue($_GET["n"],"");
 $dir = safeValue($_GET["d"],1);
@@ -7,7 +7,7 @@ $bbox = safeValue($_GET["b"],"");
 if($name == "" || $name == "/"){
   readfile("icons/white_pixels.png");
 }else{
-  $sourceDirs = array(1=>$CFG->auxDataDir."/allimgs/");
+  $sourceDirs = array(1=>"/home/caicedo/data/pascalImgs/");
   $tmpRoot = "tmp/";
   $srcRoot = $sourceDirs[$dir];
   $relativePath = explode("/",$name);
