@@ -116,7 +116,7 @@ $episodes = listMemoryEpisodes($MEM_DIR);
 <div class="Canvas" id="imageDiv"><img id="displayImage" src=""><canvas id="canvas"></canvas></div>
 </td>
 <td align="center">
-<iframe id="graphView" src="demo2.php?t=true"></iframe>
+<iframe id="graphView" src="4dworld.php?t=true"></iframe>
 </td>
 </tr></table>
 <table width="100%" border="1">
@@ -174,7 +174,7 @@ $episodes = listMemoryEpisodes($MEM_DIR);
   <tr><td align="center">
 <?php
   for($i = 0; $i < count($SELEX[$categ]); $i++) {
-    echo '<a href="demo2.php?cat='.$categ.'&img='.$SELEX[$categ][$i].'">'.$SELEX[$categ][$i].'</a> ';
+    echo '<a href="4dworld.php?cat='.$categ.'&img='.$SELEX[$categ][$i].'">'.$SELEX[$categ][$i].'</a> ';
   }
 ?>
   </td></tr>
@@ -182,7 +182,7 @@ $episodes = listMemoryEpisodes($MEM_DIR);
   <tr><td>
 <?php
   for($i = 0; $i < count($episodes); $i++) {
-    echo '<a href="demo2.php?cat='.$categ.'&img='.$episodes[$i].'">'.$episodes[$i].'</a> ';
+    echo '<a href="4dworld.php?cat='.$categ.'&img='.$episodes[$i].'">'.$episodes[$i].'</a> ';
     //if($i%12==0) echo "<br>";
   }
 ?>
