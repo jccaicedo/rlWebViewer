@@ -43,12 +43,14 @@ $SELEX = array("aeroplane"=>array('000316','001547','002217','004824'),
                "tvmonitor"=>array('000059','000790','001905','002074')
               );
 
-$MEM_DIR = "/media/T2/backupJC/Dec07/".$categ."/testMem/";
+$MEM_DIR = "/media/T2/backupJC/agent/".$categ."/testMem/";
 
 class Box {
   var $a;
   var $b;
+  var $c;
   function __construct($b){
+    $this->c = 0;
     $this->b = array($b[0]+0,$b[1]+0,$b[2]-$b[0],$b[3]-$b[1]);
     $this->a = ($b[2]-$b[0])*($b[3]-$b[1]);
   } 
@@ -63,8 +65,8 @@ class Box {
   }
 }
 
-function loadGroundTruths($img) {
-  $contents = file_get_contents("/media/T2/backupJC/lists/2007/all_objects_test.txt");
+function loadGroundTruths($categ, $img) {
+  $contents = file_get_contents("/media/T2/backupJC/lists/2007/test/".$categ."_test_bboxes.txt");
   $contents = explode("\n",$contents);
   $boxes = array();
   foreach($contents as $r){
@@ -95,7 +97,7 @@ function listMemoryEpisodes($memDir) {
 }
 
 // MAIN PHP PROCEDURE
-$gtb = loadGroundTruths($img);
+$gtb = loadGroundTruths($categ, $img);
 $numObjects = count($gtb);
 $gtb = json_encode($gtb);
 $replayData = loadReplayData($img, $MEM_DIR);
@@ -111,12 +113,12 @@ $episodes = listMemoryEpisodes($MEM_DIR);
  <b>Searching for: <?php echo $categ; ?> </b>
 </center>
 <table id="mainTable" border="1" width="100%">
-<tr><th>Image</th><th>Search Trajectory</th></tr>
+<tr><th>Image</th><th>Evolution of IoU</th></tr>
 <tr><td align="center" width="50%">
 <div class="Canvas" id="imageDiv"><img id="displayImage" src=""><canvas id="canvas"></canvas></div>
 </td>
 <td align="center">
-<iframe id="graphView" src="4dworld.php?t=true"></iframe>
+<iframe id="graphView" src="boxSearchReplay.php?t=true"></iframe>
 </td>
 </tr></table>
 <table width="100%" border="1">
@@ -174,7 +176,7 @@ $episodes = listMemoryEpisodes($MEM_DIR);
   <tr><td align="center">
 <?php
   for($i = 0; $i < count($SELEX[$categ]); $i++) {
-    echo '<a href="4dworld.php?cat='.$categ.'&img='.$SELEX[$categ][$i].'">'.$SELEX[$categ][$i].'</a> ';
+    echo '<a href="boxSearchReplay.php?cat='.$categ.'&img='.$SELEX[$categ][$i].'">'.$SELEX[$categ][$i].'</a> ';
   }
 ?>
   </td></tr>
@@ -182,8 +184,7 @@ $episodes = listMemoryEpisodes($MEM_DIR);
   <tr><td>
 <?php
   for($i = 0; $i < count($episodes); $i++) {
-    echo '<a href="4dworld.php?cat='.$categ.'&img='.$episodes[$i].'">'.$episodes[$i].'</a> ';
-    //if($i%12==0) echo "<br>";
+    echo '<a href="boxSearchReplay.php?cat='.$categ.'&img='.$episodes[$i].'">'.$episodes[$i].'</a> ';
   }
 ?>
   </td></tr>
@@ -206,12 +207,11 @@ var W = 0, H = 0;
 var landmarks = Array();
 var speed = 100;
 var actionNames = ['x-up','y-up','scale-up','ratio-up','x-down','y-down','scale-down','ratio-down','landmark','skip-region'];
+var prevMaxIoU = 0;
 
 function startReplay() {
   env = document.getElementById('graphView').contentWindow.cy;
-  changeImage('<?php echo$img?>', drawGroundTruths);
-  replayJSInterval = setInterval( function() { replayAction() }, speed );
-  playing = true;
+  changeImage('<?php echo$img?>', initializeEnvironment);
 }
 
 function stopReplay() {
@@ -219,6 +219,25 @@ function stopReplay() {
     clearInterval(replayJSInterval);
     replayJSInterval = -1;
   }
+}
+
+function initializeEnvironment(){
+  drawGroundTruths();
+  replayJSInterval = setInterval( function() { replayAction() }, speed );
+  playing = true;
+  var W = document.getElementById("canvas").width;
+  var H = document.getElementById("canvas").height;
+  env.add( {group:"nodes", data:{id:"A", w:1, h:1}, position:{x:0,y:H*0.5}} );
+  env.add( {group:"nodes", data:{id:"B", w:1, h:1}, position:{x:W,y:H*0.5}} );
+  env.add( {group:"nodes", data:{id:"C", w:1, h:1}, position:{x:0,y:H*0.25}} );
+  env.add( {group:"nodes", data:{id:"D", w:1, h:1}, position:{x:W,y:H*0.25}} );
+  env.add( {group:"nodes", data:{id:"E", w:1, h:1}, position:{x:0,y:H*0.75}} );
+  env.add( {group:"nodes", data:{id:"F", w:1, h:1}, position:{x:W,y:H*0.75}} );
+
+  env.add( {group:"edges", data:{ id:"AB", source: "A", target: "B"}} );
+  env.add( {group:"edges", data:{ id:"CD", source: "C", target: "D"}} );
+  env.add( {group:"edges", data:{ id:"EF", source: "E", target: "F"}} );
+
 }
 
 function replayAction() {
@@ -286,14 +305,17 @@ function drawGroundTruths(){
   }
   for(i = 0; i < landmarks.length; i++) {
     var maxIoU = 0;
+    var gtMatch = -1;
     for (j = 0; j < gtb.length; j++) {
       iou = getIOU(landmarks[i],gtb[j].b);
       if (iou > maxIoU) {
         maxIoU = iou;
+        gtMatch = j;
       }
     }
-    if(maxIoU > 0.5) {
+    if(maxIoU >= 0.5 && (gtb[gtMatch].c == 0 || gtb[gtMatch].c == i+1)) {
       showBox(landmarks[i],['rgba(0, 255, 0, 0.5)','rgba(255, 255, 255, 1.0)'],true);
+      gtb[gtMatch].c = i+1;
     } else {
       showBox(landmarks[i],['rgba(255, 0, 0, 0.5)','rgba(255, 255, 255, 1.0)'],true);
     }
@@ -322,10 +344,12 @@ function showBoxes(){
   for(i = 0; i < draw.length; i++) {
     showBox(draw[i],['rgba(0, 255, 255, 0.0)','rgba(255, 255, 255, 1.0)'],true);
     for (j = 0; j < gtb.length; j++) {
-      iou = getIOU(draw[i],gtb[j].b);
-      if (iou > maxIoU) {
-        maxIoU = iou;
-        bestBox = draw[i];
+      if(gtb[j].c == 0) {
+        iou = getIOU(draw[i],gtb[j].b);
+        if (iou > maxIoU) {
+          maxIoU = iou;
+          bestBox = draw[i];
+        }
       }
     }
     hits += 1;
@@ -339,33 +363,39 @@ function showBoxes(){
   document.getElementById('ratio').innerHTML = (box[3]/box[2]).toFixed(2);
   document.getElementById('action_display').innerHTML =  actionNames[chosenAction];
 
-  if (maxIoU > 0.5) {
+  if (maxIoU >= 0.5) {
     document.getElementById('feedback').innerHTML = 'Ground truth hit: IOU='+maxIoU.toFixed(2);
     showBox(bestBox,['rgba(0, 255, 255, 0.5)','rgba(255, 255, 255, 1.0)'],true);
     document.getElementById('found').innerHTML = hits;
   } else {
     document.getElementById('feedback').innerHTML = '';
   }
-  env.add( {group:"nodes", data:{id:""+visitedBoxes, w:box[2], h:box[3], action:actionNames[chosenAction]}, position:{x:box[0]+box[2]/2,y:box[1]+box[3]/2}} );
-  if(visitedBoxes > 1) {
-    env.add( {group:"edges", data:{ id:(visitedBoxes-1)+"_"+visitedBoxes, source: ""+(visitedBoxes-1), target: ""+visitedBoxes}} );
-  }
-  if(chosenAction == 2 || chosenAction == 6) {
-    env.add( {group:"nodes", data:{id:chosenAction+"S"+visitedBoxes, w:10-chosenAction, h:10-chosenAction}, position:{x:box[0]+box[2]/2,y:box[1]+box[3]/2}} );
-    env.nodes('#'+chosenAction+"_"+visitedBoxes).addClass('scale');
-  }
-  if(chosenAction == 3 || chosenAction == 7) {
-    env.add( {group:"nodes", data:{id:chosenAction+"A"+visitedBoxes, w:10-chosenAction, h:10-chosenAction}, position:{x:box[0]+box[2]/2,y:box[1]+box[3]/2}} );
-    env.nodes('#'+chosenAction+"_"+visitedBoxes).addClass('aspectRatio');
-  }
-  if(visitedBoxes >= 4){
-    env.nodes('#'+(visitedBoxes-4)).removeClass('shadow01 shadow02 shadow03').addClass('shadow04');
-    env.nodes('#'+(visitedBoxes-3)).removeClass('shadow01 shadow02').addClass('shadow03');
-    env.nodes('#'+(visitedBoxes-2)).removeClass('shadow01').addClass('shadow02');
-    env.nodes('#'+(visitedBoxes-1)).addClass('shadow01');
-  }
-}
 
+  // Draw IoU
+  var coordX = (document.getElementById("canvas").width/replay.boxes.length)*visitedBoxes;
+  var coordY = document.getElementById("canvas").height*(1-maxIoU)/2.0;
+  env.add( {group:"nodes", data:{id:"IoU"+visitedBoxes, w:5, h:5}, position:{x:coordX,y:coordY}} );
+  if(chosenAction == 8 && maxIoU >= 0.5){
+    env.add( {group:"nodes", data:{id:"Landmark"+visitedBoxes, w:8, h:8}, position:{x:coordX,y:coordY}} );
+    env.nodes('#Landmark'+visitedBoxes).addClass('positive');
+  }
+  if(chosenAction == 8 && maxIoU < 0.5){
+    env.add( {group:"nodes", data:{id:"Landmark"+visitedBoxes, w:8, h:8}, position:{x:coordX,y:coordY}} );
+    env.nodes('#Landmark'+visitedBoxes).addClass('negative');
+  }
+  // Draw Delta IoU
+  var deltaIoU = maxIoU - prevMaxIoU;
+  var coordZ = document.getElementById("canvas").height*( (0.5 - deltaIoU)/2 + 0.5 );
+  env.add( {group:"nodes", data:{id:"Delta"+visitedBoxes, w:5, h:5}, position:{x:coordX,y:coordZ}} );
+  env.nodes('#Delta'+visitedBoxes).addClass('delta');
+  // Connect edges
+  if(visitedBoxes > 1) {
+    env.add( {group:"edges", data:{ id:(visitedBoxes-1)+"_"+visitedBoxes, source: "IoU"+(visitedBoxes-1), target: "IoU"+visitedBoxes}} );
+    env.add( {group:"edges", data:{ id:"DeltaE_"+visitedBoxes, source: "Delta"+(visitedBoxes-1), target: "Delta"+visitedBoxes}} );
+  }
+  prevMaxIoU = maxIoU;
+
+}
 </script>
 </html>
 
@@ -395,11 +425,11 @@ cy = cytoscape({
       .css({
         'content': 'data(action)',
         'text-valign': 'center',
-        'shape': 'rectangle',
+        'shape': 'ellipse',
         'width': 'data(w)',
         'height': 'data(h)',
-        'opacity': 0.8,
-        'border-width': 1,
+        'opacity': 1.0,
+        'border-width': 0,
         'border-color': '#61bffc'
       })
     .selector('edge')
@@ -410,40 +440,30 @@ cy = cytoscape({
         'curve-style': 'haystack',
         'haystack-radius': '0'
       })
-    .selector('.shadow01')
+    .selector('.positive')
       .css({
-        'opacity': 0.6,
-        'transition-duration': '0.5s'
-      })
-    .selector('.shadow02')
-      .css({
-        'opacity': 0.4,
-        'transition-duration': '0.5s'
-      })
-    .selector('.shadow03')
-      .css({
-        'opacity': 0.2,
-        'transition-duration': '0.5s'
-      })
-    .selector('.shadow04')
-      .css({
-        'opacity': 0.0,
-        'transition-duration': '0.5s'
-      })
-    .selector('.scale')
-      .css({
-        'background-color': '#61bffc',
-        'line-color': '#61bffc',
-        'target-arrow-color': '#61bffc',
+        'shape': 'ellipse',
+        'background-color': 'green',
+        'line-color': 'green',
+        'target-arrow-color': 'green',
         'transition-property': 'background-color, line-color, target-arrow-color',
         'transition-duration': '0.0s'
       })
-    .selector('.aspectRatio')
+    .selector('.negative')
       .css({
         'shape': 'ellipse',
-        'background-color': '#C52FE6',
-        'line-color': '#C52FE6',
-        'target-arrow-color': '#C52FE6',
+        'background-color': 'red',
+        'line-color': 'red',
+        'target-arrow-color': 'red',
+        'transition-property': 'background-color, line-color, target-arrow-color',
+        'transition-duration': '0.0s'
+      })
+    .selector('.delta')
+      .css({
+        'shape': 'ellipse',
+        'background-color': 'brown',
+        'line-color': 'brown',
+        'target-arrow-color': 'brown',
         'transition-property': 'background-color, line-color, target-arrow-color',
         'transition-duration': '0.0s'
       }),

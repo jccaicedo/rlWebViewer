@@ -36,25 +36,25 @@ text-align: center;
 
   <h3>Categories</h3>
   <ul>
-    <li> <a href="4dworld.php?cat=aeroplane&img=000067" >Aeroplane</a> </li>
-    <li> <a href="4dworld.php?cat=bicycle&img=000015">Bicycle</a> </li>
-    <li> <a href="4dworld.php?cat=bird&img=000040">Bird</a> </li>
-    <li> <a href="4dworld.php?cat=boat&img=000069">Boat</a> </li>
-    <li> <a href="4dworld.php?cat=bottle&img=000144">Bottle</a> </li>
-    <li> <a href="4dworld.php?cat=bus&img=000014">Bus</a> </li>
-    <li> <a href="4dworld.php?cat=car&img=000004">Car</a> </li>
-    <li> <a href="4dworld.php?cat=cat&img=000011">Cat</a> </li>
-    <li> <a href="4dworld.php?cat=chair&img=000003">Chair</a> </li>
-    <li> <a href="4dworld.php?cat=cow&img=000013">Cow</a> </li>
-    <li> <a href="4dworld.php?cat=diningtable&img=000006">Dining-Table</a> </li>
-    <li> <a href="4dworld.php?cat=dog&img=000001">Dog</a> </li>
-    <li> <a href="4dworld.php?cat=horse&img=000010">Horse</a> </li>
-    <li> <a href="4dworld.php?cat=motorbike&img=000038">Motorbike</a> </li>
-    <li> <a href="4dworld.php?cat=person&img=000001">Person</a> </li>
-    <li> <a href="4dworld.php?cat=pottedplant&img=000006">Potted Plant</a> </li>
-    <li> <a href="4dworld.php?cat=sheep&img=000062">Sheep</a> </li>
-    <li> <a href="4dworld.php?cat=sofa&img=000003">Sofa</a> </li>
-    <li> <a href="4dworld.php?cat=train&img=000002">Train</a> </li>
-    <li> <a href="4dworld.php?cat=tvmonitor&img=000045">TV/Monitor</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=aeroplane&img=000067" >Aeroplane</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=bicycle&img=000015">Bicycle</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=bird&img=000040">Bird</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=boat&img=000069">Boat</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=bottle&img=000144">Bottle</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=bus&img=000014">Bus</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=car&img=000004">Car</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=cat&img=000011">Cat</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=chair&img=000003">Chair</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=cow&img=000013">Cow</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=diningtable&img=000006">Dining-Table</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=dog&img=000001">Dog</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=horse&img=000010">Horse</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=motorbike&img=000038">Motorbike</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=person&img=000001">Person</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=pottedplant&img=000006">Potted Plant</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=sheep&img=000062">Sheep</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=sofa&img=000003">Sofa</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=train&img=000002">Train</a> </li>
+    <li> <a href="boxSearchReplay.php?cat=tvmonitor&img=000045">TV/Monitor</a> </li>
   </ul> 
 </html>
