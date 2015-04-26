@@ -112,65 +112,60 @@ $episodes = listMemoryEpisodes($MEM_DIR);
  <a href="demo.php">Back to Home</a> <br>
  <b>Searching for: <?php echo $categ; ?> </b>
 </center>
-<table id="mainTable" border="1" width="100%">
+<table id="mainTable" border="1" width="100%" style="border-collapse: collapse;">
 <tr><th>Image</th><th>Evolution of IoU</th></tr>
 <tr><td align="center" width="50%">
 <div class="Canvas" id="imageDiv"><img id="displayImage" src=""><canvas id="canvas"></canvas></div>
 </td>
 <td align="center">
-<iframe id="graphView" src="boxSearchReplay.php?t=true"></iframe>
-</td>
-</tr></table>
-<table width="100%" border="1">
+<iframe id="graphView" src="boxSearchReplay.php?t=true"></iframe><br><br>
+<table width="100%" border="2" style="border-collapse: collapse;">
   <tr>
-    <td width="33%">
+    <td width="30%">
       <b>Environment Info</b>
       <!-- <a href="showBoxes.php">Initialize</a> !--> <hr>
-      Total Number of boxes: <span id="nBoxes">0</span><br>
-      Visited boxes: <span id="visited">0</span><br>
-      Ground truth objects: <span id="objects"><?php echo$numObjects?></span><br>
-      Good candidates found: <span id="found">0</span>
+      Visited regions: <span id="visited">0</span><br>
+      Target objects: <span id="objects"><?php echo$numObjects?></span><br>
+      True Positives: <span id="found">0</span><br>
+      False Positives: <span id="falsePositives">0</span>
     </td>
     <td width="34%">
       <table align="center">
         <tr><th colspan="2">ACTION CONTROLS</th></tr>
         <tr>
         <td align="center" colspan="2">
-          <table border="1">
+          <table id="a8" cellpadding="3" cellspacing="3">
             <tr>
-              <td class="bcell"><input type="button" value="Up" onclick="action(0)"/></td>
-              <td class="bcell"><input type="button" value="Up" onclick="action(1)"/></td>
-              <td class="bcell"><input type="button" value="Up" onclick="action(2)"/></td>
-              <td class="bcell"><input type="button" value="Up" onclick="action(3)"/></td>
+              <td class="bcell" id="a0"><input type="image" src="icons/0.right.png" onclick="action(0)"/></td>
+              <td class="bcell" id="a1"><input type="image" src="icons/5.down.png" onclick="action(1)"/></td>
+              <td class="bcell" id="a2"><input type="image" src="icons/2.scaleUp.png" onclick="action(2)"/></td>
+              <td class="bcell" id="a3"><input type="image" src="icons/3.ratioUp.png" onclick="action(3)"/></td>
             </tr>
             <tr>
-              <td class="bcell">X-Coord</td><td class="bcell">Y-Coord</td>
-              <td class="bcell">Scale</td><td class="bcell">Aspect Ratio</td>
-            </tr>
-            <tr>
-              <td class="bcell"><input type="button" value="Down" onclick="action(4)"/></td>
-              <td class="bcell"><input type="button" value="Down" onclick="action(5)"/></td>
-              <td class="bcell"><input type="button" value="Down" onclick="action(6)"/></td>
-              <td class="bcell"><input type="button" value="Down" onclick="action(7)"/></td>
+              <td class="bcell" id="a4"><input type="image" src="icons/4.left.png" onclick="action(4)"/></td>
+              <td class="bcell" id="a5"><input type="image" src="icons/1.up.png" onclick="action(5)"/></td>
+              <td class="bcell" id="a6"><input type="image" src="icons/6.scaleDown.png" onclick="action(6)"/></td>
+              <td class="bcell" id="a7"><input type="image" src="icons/7.ratioDown.png" onclick="action(7)"/></td>
             </tr>
           </table>
         </td>
         </tr>
         <tr>
-          <td align="center">Action Value: <br><span id="actionValue"></span></td>
-          <td align="center">Reward: <br><span id="reward"></span></td>
+          <td align="center"></td>
+          <td align="center"></td>
         </tr>
       </table>
     </td>
     <td>
-      <b>Action Feedback</b> (t=<span id="counter">0</span>)<hr>
-      Box: <span id="box"></span><br>
-      Aspect Ratio: <span id="ratio"></span><br>
-      Action: <span id="action_display"></span><br>
-      <font color="blue"><span id="feedback"></span></font>
-      <font color="white">.</font>
+      <b>Action Feedback</b> <hr>
+      Time: <span id="counter">0</span><br>
+      Action Value: <span id="actionValue"></span><br>
+      Reward: <span id="reward"></span><br>
+      IoU: <span id="feedback"></span>
     </td>
 </table>
+</td>
+</tr></table>
 <table>
   <tr><th>Selected Examples</th></tr>
   <tr><td align="center">
@@ -191,13 +186,11 @@ $episodes = listMemoryEpisodes($MEM_DIR);
 </table>
 <script>
 var replay = <?php echo $replayData?>;
-var maximumBoxes = 2000;
 var visitedBoxes = 0;
 var actionChosen = 0;
 var currentNode = 0;
 var env = null; 
 var gtb = <?php echo $gtb?>;
-var hits = 0;
 var chosenAction = 0;
 var actionCounter = 0;
 var replayInstant = 0;
@@ -208,6 +201,8 @@ var landmarks = Array();
 var speed = 100;
 var actionNames = ['x-up','y-up','scale-up','ratio-up','x-down','y-down','scale-down','ratio-down','landmark','skip-region'];
 var prevMaxIoU = 0;
+var truePositives = 0;
+var falsePositives = 0;
 
 function startReplay() {
   env = document.getElementById('graphView').contentWindow.cy;
@@ -238,15 +233,19 @@ function initializeEnvironment(){
   env.add( {group:"edges", data:{ id:"CD", source: "C", target: "D"}} );
   env.add( {group:"edges", data:{ id:"EF", source: "E", target: "F"}} );
 
+  document.getElementById("graphView").height = H/2;
 }
 
 function replayAction() {
   if(replayInstant < replay.actions.length){
     b = replay.boxes[replayInstant];
     box = [b[0],b[1],b[2]-b[0],b[3]-b[1]];
+    document.getElementById('a'+chosenAction).bgColor = '#FFFFFF';
     chosenAction = replay.actions[replayInstant];
+    document.getElementById('a'+chosenAction).bgColor = '#FFBF00';
     if(chosenAction == 8) {
       landmarks.push(box);
+      document.getElementById('a'+chosenAction).bgColor = '#FF0000';
     }
     showBoxes();
     document.getElementById('actionValue').innerHTML = ' ' + replay.values[replayInstant].toFixed(2);
@@ -300,6 +299,7 @@ function action(a) {
 }
 
 function drawGroundTruths(){
+  truePositives = falsePositives = 0;
   for(i = 0; i < gtb.length; i++) {
     showBox(gtb[i].b,['rgba(0, 0, 0, 0.0)','rgba(255, 0, 0, 1.0)'],true);
   }
@@ -316,8 +316,10 @@ function drawGroundTruths(){
     if(maxIoU >= 0.5 && (gtb[gtMatch].c == 0 || gtb[gtMatch].c == i+1)) {
       showBox(landmarks[i],['rgba(0, 255, 0, 0.5)','rgba(255, 255, 255, 1.0)'],true);
       gtb[gtMatch].c = i+1;
+      truePositives += 1;
     } else {
       showBox(landmarks[i],['rgba(255, 0, 0, 0.5)','rgba(255, 255, 255, 1.0)'],true);
+      falsePositives += 1;
     }
   }
   if (box[0]+box[1]+box[2]+box[3] == 0) {
@@ -352,24 +354,14 @@ function showBoxes(){
         }
       }
     }
-    hits += 1;
   }
   drawGroundTruths();
-  percent = 100*(visitedBoxes/maximumBoxes);
-  document.getElementById('visited').innerHTML = visitedBoxes + ' ('+percent.toFixed(2)+'%)';
+  document.getElementById('visited').innerHTML = visitedBoxes;
   document.getElementById('counter').innerHTML = actionCounter;
-  document.getElementById('nBoxes').innerHTML = maximumBoxes;
-  document.getElementById('box').innerHTML = '(' + box[0].toFixed(0) + ',' + box[1].toFixed(0) + ',' + box[2].toFixed(0) + ',' + box[3].toFixed(0) + ')';
-  document.getElementById('ratio').innerHTML = (box[3]/box[2]).toFixed(2);
-  document.getElementById('action_display').innerHTML =  actionNames[chosenAction];
 
-  if (maxIoU >= 0.5) {
-    document.getElementById('feedback').innerHTML = 'Ground truth hit: IOU='+maxIoU.toFixed(2);
-    showBox(bestBox,['rgba(0, 255, 255, 0.5)','rgba(255, 255, 255, 1.0)'],true);
-    document.getElementById('found').innerHTML = hits;
-  } else {
-    document.getElementById('feedback').innerHTML = '';
-  }
+  document.getElementById('feedback').innerHTML = maxIoU.toFixed(2);
+  document.getElementById('found').innerHTML = truePositives;
+  document.getElementById('falsePositives').innerHTML = falsePositives;
 
   // Draw IoU
   var coordX = (document.getElementById("canvas").width/replay.boxes.length)*visitedBoxes;
@@ -383,15 +375,9 @@ function showBoxes(){
     env.add( {group:"nodes", data:{id:"Landmark"+visitedBoxes, w:8, h:8}, position:{x:coordX,y:coordY}} );
     env.nodes('#Landmark'+visitedBoxes).addClass('negative');
   }
-  // Draw Delta IoU
-  var deltaIoU = maxIoU - prevMaxIoU;
-  var coordZ = document.getElementById("canvas").height*( (0.5 - deltaIoU)/2 + 0.5 );
-  env.add( {group:"nodes", data:{id:"Delta"+visitedBoxes, w:5, h:5}, position:{x:coordX,y:coordZ}} );
-  env.nodes('#Delta'+visitedBoxes).addClass('delta');
   // Connect edges
   if(visitedBoxes > 1) {
     env.add( {group:"edges", data:{ id:(visitedBoxes-1)+"_"+visitedBoxes, source: "IoU"+(visitedBoxes-1), target: "IoU"+visitedBoxes}} );
-    env.add( {group:"edges", data:{ id:"DeltaE_"+visitedBoxes, source: "Delta"+(visitedBoxes-1), target: "Delta"+visitedBoxes}} );
   }
   prevMaxIoU = maxIoU;
 
